@@ -1,0 +1,13 @@
+#!/bin/bash
+
+INSTALL_DIR="/opt/distributed-cron"
+ZOOKEEPER="192.168.0.1,192.168.0.2,192.168.0.3"
+SERVICE_NAME="cron"
+
+# Check if this is the active node
+java -jar $INSTALL_DIR/leaderElection.jar --server $ZOOKEEPER --name $SERVICE_NAME --is-leader &> /dev/null
+
+# If this is the master node run the program
+if [[ $? == 0 ]]; then
+	$@
+fi
