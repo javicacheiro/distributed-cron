@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# Purpose: Sync user's cron content between all cron nodes
+# Usage: Run sync_cron after editing your user crontab in one of the nodes
+
+CONFIG="$HOME/.cron.`date  +%y%m%d_%H%M`"
+NODELIST="fs6801 fs6802 fs6803 fs6804"
+
+crontab -l > $CONFIG
+
+for node in $NODELIST; do
+	if [[ $node != $HOSTNAME ]]; then
+		ssh $node crontab $CONFIG
+	fi
+done

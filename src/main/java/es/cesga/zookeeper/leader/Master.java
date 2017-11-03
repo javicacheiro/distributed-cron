@@ -25,6 +25,8 @@ public class Master {
 
     private static final Logger logger = LoggerFactory.getLogger(Master.class);
     private static final Charset CHARSET = Charset.forName("UTF-8");
+    private static final String LOCK_BASE_PATH = "/locks";
+    private static final String MASTER_BASE_PATH = "/masters";
     private static String hostname;
     private final String groupName;
     private ConnectionWatcher connection;
@@ -47,11 +49,11 @@ public class Master {
     }
 
     private String getLockPath() {
-        return "/locks/" + groupName;
+        return LOCK_BASE_PATH + "/" + groupName;
     }
 
     private String getMasterPath() {
-        return "/masters/" + groupName;
+        return MASTER_BASE_PATH + "/" + groupName;
     }
 
     /**
@@ -61,6 +63,10 @@ public class Master {
      */
     public void start() throws IOException, InterruptedException {
         zk = connection.connect();
+
+        createPath(MASTER_BASE_PATH, "master_location");
+        createPath(LOCK_BASE_PATH, "lock_management");
+
         logger.info("Trying to obtain the lock to be the service leader");
         lock = new WriteLock(zk, getLockPath(), Ids.OPEN_ACL_UNSAFE, new LeaderChangeListener());
 
@@ -92,6 +98,23 @@ public class Master {
             } catch (InterruptedException e2) {
                 logger.error("Interrupted while closing connection to zookeeper");
             }
+        }
+    }
+
+    private void createPath(String path, String value) {
+        try {
+            Stat stat = zk.exists(path, false);
+            if (stat == null) {
+                logger.info("Creating master base path znode: {}", path);
+                zk.create(path, value.getBytes(CHARSET), Ids.OPEN_ACL_UNSAFE,
+                        CreateMode.PERSISTENT);
+            }
+        } catch (KeeperException e) {
+            logger.error("Unable to create znode: {}", path);
+            System.exit(2);
+        } catch (InterruptedException e) {
+            logger.error("Interrupted while creating znode: {}", path);
+            System.exit(2);
         }
     }
 

@@ -9,7 +9,7 @@ takes the leadership.
 
 ## Installation
 
-### Compile and distribute jar
+### Compile and distribute service jar
 Generate the required jar using maven:
 
     git clone https://github.com/javicacheiro/distributed-cron.git
@@ -17,14 +17,7 @@ Generate the required jar using maven:
 
 Copy the generated jar file: target/leaderElection-0.1.0-jar-with-dependencies.jar to the hosts that will run the service.
 
-### Create required znodes
-For the moment, you have to create the required base znodes in zookeeper:
-
-    zookeeper-client -server <zookeeper_servers>
-    >> create /locks lock_storage
-    >> create /masters master_location
-
-### Run service
+### Start the service
 For old systems you can use supervisord to run and monitor the service. A template configuration is provided
 in scripts/supervisord.conf. Just set the zookeeper location and the paths and it should be ready to run.
 Then simply execute a reload to start the new service:
@@ -34,18 +27,24 @@ Then simply execute a reload to start the new service:
 
 For new systems systemd is a good option.
 
-### Copy the run helper script
-Edit the run helper script and set the zookeeper location and other required vars.
-Copy the `scripts/run` helper to the target hosts and, for easier use, place it under some directory that is in the
-PATH (eg. /usr/local/bin).
+### Copy the run and `sync_cron` helper scripts
+Edit the `scripts/run` and `scripts/sync_cron` helper scripts and set the zookeeper location and other required vars.
 
+Copy them to the target hosts and, for easier use, place them under some directory that is in the
+PATH (eg. /usr/local/bin).
 
 ## Usage
 Just prepend `run` to the command in the cron job definition:
 
+    PATH=/sbin:/usr/sbin:/usr/local/sbin:/bin:/usr/bin:/usr/local/bin
+
     * * * * * run echo hello
 
 and the command will run just in one host (the current leader of the service).
+
+To synchronize the changes across all cron service hosts you can use:
+
+    sync_cron
 
 ## Generic leader election service
 The leader election service can also be used in a generic way for other services similar to cron:
