@@ -3,13 +3,16 @@
 # Purpose: Sync user's cron content between all cron nodes
 # Usage: Run sync_cron after editing your user crontab in one of the nodes
 
-CONFIG="$HOME/.cron.`date  +%y%m%d_%H%M`"
-NODELIST="fs6801 fs6802 fs6803 fs6804"
+CONFIG="$HOME/.cron.$(date  +%y%m%d_%H%M)"
+NODELIST="fs6801 fs6802 fs6803"
 
 crontab -l > $CONFIG
 
 for node in $NODELIST; do
 	if [[ $node != $HOSTNAME ]]; then
+        if [[ "$LOGNAME" == "root" ]]; then
+            scp $CONFIG $node:
+        fi
 		ssh $node crontab $CONFIG
 	fi
 done
