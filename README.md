@@ -64,4 +64,7 @@ Using zookeeper-client (wrapper over zkCli.sh) to debug:
     >> ls /locks/<service_name>
     >> get /masters/<service_name>
 
+## Monitoring active servers
+To monitor the number of active servers you can run the following command:
 
+    zookeeper-client ls /locks/<service_name> | tail -n1 | wc -w
